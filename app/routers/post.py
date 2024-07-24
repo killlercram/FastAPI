@@ -1,6 +1,6 @@
 
-from .. import models,schemas,utils,oauth2
-from fastapi import FastAPI,Response,status,HTTPException,Depends,APIRouter
+from .. import models,schemas,oauth2
+from fastapi import Response,status,HTTPException,Depends,APIRouter
 from ..database import SessionLocal, engine,get_db
 from sqlalchemy.orm import Session
 from typing import Optional,List
@@ -11,7 +11,7 @@ router=APIRouter(
 )
 
 @router.get("/",response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(get_db),current_user: int =Depends(oauth2.get_current_user)):
+def get_posts(db: Session = Depends(get_db),current_user: schemas.userOut =Depends(oauth2.get_current_user)):
   # cursor.execute("""Select * from posts""")
   # posts=cursor.fetchall()
   posts=db.query(models.Post).all()
@@ -26,9 +26,9 @@ def create_posts(post: schemas.PostCreate,db: Session = Depends(get_db),current_
   # cursor.execute("""insert into posts (title,content,published) values (%s,%s,%s) returning * """,(post.title,post.content,post.published))
   # new_post=cursor.fetchone()
   # conn.commit()
-  print(current_user.email)
+  # print(current_user.email)
 
-  new_post=models.Post(**post.model_dump())
+  new_post=models.Post(**post.dict())
   db.add(new_post)
   db.commit()
   db.refresh(new_post)
@@ -52,7 +52,7 @@ def get_post(id:int,response: Response,db: Session = Depends(get_db),current_use
 
 
 #Deleting the post
-@router.delete("/deletes/{id}",status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}",status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id:int,db: Session = Depends(get_db),current_user: int =Depends(oauth2.get_current_user)):
   # find the index in the database then remove it
   # my_posts.pop(index)
