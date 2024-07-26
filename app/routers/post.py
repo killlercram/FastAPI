@@ -1,9 +1,11 @@
 
+from datetime import datetime
 from .. import models,schemas,oauth2
 from fastapi import Response,status,HTTPException,Depends,APIRouter
 from ..database import SessionLocal, engine,get_db
 from sqlalchemy.orm import Session
 from typing import Optional,List
+from sqlalchemy import func
 
 router=APIRouter(
   prefix="/posts",
@@ -16,11 +18,13 @@ def get_posts(db: Session = Depends(get_db),current_user: schemas.userOut =Depen
   # cursor.execute("""Select * from posts""")
   # posts=cursor.fetchall()
 
- # posts=db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
+  # posts=db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
   posts=db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
-  return  posts
 
+  #This is no working right now
+  results =db.query(models.Post,func.count(models.Vote.post_id).label("votes")).join(models.Vote,models.Vote.post_id == models.Post.id,isouter=True).group_by(models.Post.id).all()
 
+  return posts
 
 #creating the data inside
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=schemas.Post)
@@ -48,6 +52,9 @@ def get_post(id:int,response: Response,db: Session = Depends(get_db),current_use
   # post=cursor.fetchone()
 
   post=db.query(models.Post).filter(models.Post.id==id).first()
+#dont know why its not working
+  results =db.query(models.Post,func.count(models.Vote.post_id).label("votes")).join(models.Vote,models.Vote.post_id == models.Post.id,isouter=True).group_by(models.Post.id).all()
+  
   if not post:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"Post with id: {id} was not found")
     
