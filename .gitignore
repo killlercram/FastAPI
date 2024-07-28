@@ -6,3 +6,4 @@ env.py
 README
 script.py.mako
 alembic.ini
+Dockerfile
