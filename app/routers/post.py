@@ -21,7 +21,7 @@ def get_posts(db: Session = Depends(get_db),current_user: schemas.userOut =Depen
   # posts=db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()
   posts=db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
 
-  #This is no working right now
+  #This is not working right now
   results =db.query(models.Post,func.count(models.Vote.post_id).label("votes")).join(models.Vote,models.Vote.post_id == models.Post.id,isouter=True).group_by(models.Post.id).all()
 
   return posts
